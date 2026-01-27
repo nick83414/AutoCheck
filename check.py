@@ -4,10 +4,10 @@ import os
 from bs4 import BeautifulSoup
 
 LINE_TOKEN = os.environ["LINE_TOKEN"]
-USER_ID = "Ua7aa35fba69573bb0b679da49f6c293e"
+USER_ID = os.environ["LINE_USER_ID"]
 
 URLS = {
-    "2/7": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-7#reserves_from",
+    "2/8": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-8#reserves_from",
     "2/27": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-27#reserves_from",
     "2/28": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-28#reserves_from",
     "3/1":  "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-3-1#reserves_from"
