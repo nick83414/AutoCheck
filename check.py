@@ -7,6 +7,7 @@ LINE_TOKEN = os.environ["LINE_TOKEN"]
 USER_ID = "Ua7aa35fba69573bb0b679da49f6c293e"
 
 URLS = {
+    "2/7": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-7#reserves_from",
     "2/27": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-27#reserves_from",
     "2/28": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-28#reserves_from",
     "3/1":  "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-3-1#reserves_from"
@@ -49,7 +50,6 @@ def send_line(message):
 
     print("LINE:", r.status_code, r.text)
 
-
 def get_available_slots(label, url):
     res = requests.get(url, timeout=10)
     res.raise_for_status()
@@ -69,23 +69,29 @@ def get_available_slots(label, url):
         status = tds[1].get_text(strip=True)
 
         if status in ("○", "△"):
-            result.append(f"{label} {time_text}（{status}）")
+            text = f"{label} {time_text}（{status}）"
+            result.append((text, url))
 
     return result
 
-
 def main():
     notified = load_notified()
-    new_slots = []
+    new_items = []
 
     for label, url in URLS.items():
-        for slot in get_available_slots(label, url):
-            if slot not in notified:
-                new_slots.append(slot)
-                notified.add(slot)
+        for text, link in get_available_slots(label, url):
+            if text not in notified:
+                new_items.append((text, link))
+                notified.add(text)
 
-    if new_slots:
-        message = "🎉 發現新的可預約班次！\n" + "\n".join(new_slots)
+    if new_items:
+        lines = ["🎉 發現新的可預約班次！\n"]
+        for text, link in new_items:
+            lines.append(text)
+            lines.append(f"👉 {link}")
+            lines.append("")
+
+        message = "\n".join(lines)
         send_line(message)
         save_notified(notified)
     else:
