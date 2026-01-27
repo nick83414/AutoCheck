@@ -1,36 +1,54 @@
 import requests
-import time
+import json
+import os
 from bs4 import BeautifulSoup
 
-LINE_TOKEN = "KmUhMZQ+k0BaM4pIMkfTYGAR7lpn+hAIbMv2k0hAfl52+TxOpQwx/5GzrGZOn0VZONEaE4o8qkvCnO82IMi0k+RS7MSxngHMdomoEjqTPAHiY1otVWMSYkCFKGnVcJ1juJNHDuDu0xxjgPq1uFK4AQdB04t89/1O/w1cDnyilFU="
+LINE_TOKEN = os.environ["LINE_TOKEN"]
 USER_ID = "Ua7aa35fba69573bb0b679da49f6c293e"
 
 URLS = {
-    "2/27": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-7#reserves_from",
+    "2/27": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-27#reserves_from",
     "2/28": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-28#reserves_from",
-    "3/1": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-3-1#reserves_from"
+    "3/1":  "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-3-1#reserves_from"
 }
+
+STATE_FILE = "notified.json"
+
+
+def load_notified():
+    if not os.path.exists(STATE_FILE):
+        return set()
+    with open(STATE_FILE, "r", encoding="utf-8") as f:
+        return set(json.load(f))
+
+
+def save_notified(data):
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(sorted(list(data)), f, ensure_ascii=False, indent=2)
+
 
 def send_line(message):
     headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {LINE_TOKEN}"
+        "Authorization": f"Bearer {LINE_TOKEN}",
+        "Content-Type": "application/json"
     }
+
     data = {
-        "to":USER_ID,
-        "messages":[
-            {
-                "type":"text",
-                "text":message
-            }
+        "to": USER_ID,
+        "messages": [
+            {"type": "text", "text": message}
         ]
     }
-    requests.post(
+
+    r = requests.post(
         "https://api.line.me/v2/bot/message/push",
         headers=headers,
         json=data,
         timeout=10
     )
+
+    print("LINE:", r.status_code, r.text)
+
 
 def get_available_slots(label, url):
     res = requests.get(url, timeout=10)
@@ -41,10 +59,8 @@ def get_available_slots(label, url):
     if not table:
         return []
 
-    available = []
-    rows = table.find_all("tr")[1:]
-
-    for row in rows:
+    result = []
+    for row in table.find_all("tr")[1:]:
         tds = row.find_all("td")
         if len(tds) < 2:
             continue
@@ -53,33 +69,28 @@ def get_available_slots(label, url):
         status = tds[1].get_text(strip=True)
 
         if status in ("○", "△"):
-            available.append(f"{label} {time_text}（{status}）")
+            result.append(f"{label} {time_text}（{status}）")
 
-    return available
+    return result
+
+
+def main():
+    notified = load_notified()
+    new_slots = []
+
+    for label, url in URLS.items():
+        for slot in get_available_slots(label, url):
+            if slot not in notified:
+                new_slots.append(slot)
+                notified.add(slot)
+
+    if new_slots:
+        message = "🎉 發現新的可預約班次！\n" + "\n".join(new_slots)
+        send_line(message)
+        save_notified(notified)
+    else:
+        print("沒有新的空位")
+
 
 if __name__ == "__main__":
-    notified = set()
-
-    while True:
-        try:
-            all_new_slots = []
-
-            for label, url in URLS.items():
-                slots = get_available_slots(label, url)
-
-                for s in slots:
-                    if s not in notified:
-                        all_new_slots.append(s)
-                        notified.add(s)
-
-            if all_new_slots:
-                message = "🎉 發現可預約班次！\n" + "\n".join(all_new_slots)
-                send_line(message)
-                print("已通知：", all_new_slots)
-            else:
-                print("目前都沒有新空位")
-
-        except Exception as e:
-            print("錯誤：", e)
-
-        time.sleep(600)  # 每 10 分鐘
+    main()
