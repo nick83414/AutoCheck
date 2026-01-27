@@ -1,8 +1,8 @@
-name: AutoCheck
+name: Reservation Check
 
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -24,7 +24,10 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - run: python check.py
+      - name: Run checker
+        run: python check.py
+        env:
+          LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
 
       - name: Save notified cache
         uses: actions/cache@v4
