@@ -12,12 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Restore notified cache
-        uses: actions/cache@v4
-        with:
-          path: notified.json
-          key: notified-cache
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -29,8 +23,10 @@ jobs:
         env:
           LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
 
-      - name: Save notified cache
-        uses: actions/cache@v4
-        with:
-          path: notified.json
-          key: notified-cache
+      - name: Commit notified.json
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add notified.json
+          git commit -m "Update notified slots" || echo "No changes"
+          git push
