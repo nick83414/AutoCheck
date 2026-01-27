@@ -29,6 +29,7 @@ jobs:
         run: python check.py
         env:
           LINE_TOKEN: ${{ secrets.LINE_TOKEN }}
+          LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
 
       - name: Commit notified.json
         run: |
