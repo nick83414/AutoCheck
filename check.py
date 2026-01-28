@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 LINE_TOKEN = os.environ["LINE_TOKEN"]
 USER_ID = os.environ["LINE_USER_ID"]
+USER_IDs = json.loads(os.environ["LINE_USER_IDs"])
 
 URLS = {
     "2/8": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-8#reserves_from",
@@ -35,14 +36,14 @@ def send_line(message):
     }
 
     data = {
-        "to": USER_ID,
+        "to": USER_IDs,
         "messages": [
             {"type": "text", "text": message}
         ]
     }
 
     r = requests.post(
-        "https://api.line.me/v2/bot/message/push",
+        "https://api.line.me/v2/bot/message/multicast",
         headers=headers,
         json=data,
         timeout=10
