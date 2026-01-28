@@ -8,7 +8,6 @@ USER_ID = os.environ["LINE_USER_ID"]
 USER_IDs = json.loads(os.environ["LINE_USER_IDs"])
 
 URLS = {
-    "2/8": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-8#reserves_from",
     "2/27": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-27#reserves_from",
     "2/28": "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-2-28#reserves_from",
     "3/1":  "https://www.ms-aurora.com/abashiri/reserves/new_next.php?ynj=2026-3-1#reserves_from"
